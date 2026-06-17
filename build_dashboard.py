@@ -5,7 +5,14 @@ Fast mode: skips regeneration if source data unchanged.
 import os, json, datetime
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.environ.get("TWSE_DATA_DIR", os.path.join(BASE_DIR, "data"))
+DATA_DIR = os.environ.get("TWSE_DATA_DIR", "")
+if not DATA_DIR or not os.path.isdir(DATA_DIR):
+    # Fallback: check if the established data dir exists
+    fallback = r"D:\Data\TWSE\yfinance"
+    if os.path.isdir(fallback):
+        DATA_DIR = fallback
+    else:
+        DATA_DIR = os.path.join(BASE_DIR, "data")
 OUTPUT_FILE = os.environ.get("TWSE_OUTPUT_FILE", os.path.join(BASE_DIR, "dashboard.html"))
 CACHE_FILE = os.path.join(DATA_DIR, "_dashboard_cache.json")
 

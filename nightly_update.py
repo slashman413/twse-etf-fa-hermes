@@ -5,7 +5,14 @@ from datetime import datetime, timedelta
 import yfinance as yf
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.environ.get("TWSE_DATA_DIR", os.path.join(BASE_DIR, "data"))
+DATA_DIR = os.environ.get("TWSE_DATA_DIR", "")
+if not DATA_DIR or not os.path.isdir(DATA_DIR):
+    # Fallback: check if the established data dir exists
+    fallback = r"D:\Data\TWSE\yfinance"
+    if os.path.isdir(fallback):
+        DATA_DIR = fallback
+    else:
+        DATA_DIR = os.path.join(BASE_DIR, "data")
 os.makedirs(DATA_DIR, exist_ok=True)
 os.chdir(BASE_DIR)
 sys.path.insert(0, BASE_DIR)
@@ -113,6 +120,11 @@ def check_stale(codes):
 
 def main():
     print(f"=== TWSE ETF Nightly Update ===", flush=True)
+    start = datetime.now()
+    t0 = time.time()
+    
+    errors = []  # always defined
+    
     print(f"Start: {datetime.now().strftime('%Y-%m-%d %H:%M')}", flush=True)
     
     all_codes = get_all_stock_codes()
