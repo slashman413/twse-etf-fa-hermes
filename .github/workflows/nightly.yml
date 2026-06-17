@@ -1,0 +1,39 @@
+name: Nightly ETF Data Update
+
+on:
+  schedule:
+    - cron: '0 20 * * *'   # 每天 20:00 UTC+8 = 12:00 UTC
+  workflow_dispatch:        # 可手動觸發
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install deps
+        run: pip install yfinance
+
+      - name: Run nightly update
+        run: python nightly_update.py
+        env:
+          TWSE_DATA_DIR: ${{ github.workspace }}/data
+
+      - name: Commit & push results
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add dashboard.html data/*/meta.json 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "auto: nightly ETF data update $(date +'%Y-%m-%d')"
+            git push
+          fi
