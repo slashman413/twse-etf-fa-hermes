@@ -9,7 +9,7 @@ from datetime import datetime
 
 import yfinance as yf
 
-DATA_DIR = r"D:\Data\TWSE\yfinance"
+DATA_DIR = os.environ.get("TWSE_DATA_DIR", r"D:\Data\TWSE\yfinance")
 os.makedirs(DATA_DIR, exist_ok=True)
 
 # 從共用模組載入 ETF 清單，確保唯一事實來源
