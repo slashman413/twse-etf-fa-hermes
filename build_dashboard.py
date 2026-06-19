@@ -200,7 +200,7 @@ function renderApp(){
   if(currentTab==='overview'){ h += renderOverview(); }
   else { h += renderIndividual(); }
   h += '</div>';
-  h += '<div class="footer">資料來源: yfinance · 自動更新: 每週一 09:00</div>';
+  h += '<div class="footer">資料來源: yfinance · <a href="./privacy.html" style="color:#94a3b8;text-decoration:none">隱私權政策</a></div>';
   app.innerHTML = h;
   app.querySelector('#stockBody')?.addEventListener('click', function(e){
     var tr = e.target.closest('tr[data-code]');
@@ -492,6 +492,8 @@ document.addEventListener('DOMContentLoaded', renderApp);
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TWSE ETF 財務儀表板</title>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5115666613619890"
+        crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
