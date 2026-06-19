@@ -17,8 +17,11 @@ os.makedirs(DATA_DIR, exist_ok=True)
 os.chdir(BASE_DIR)
 sys.path.insert(0, BASE_DIR)
 from etf_holdings import ETF_HOLDINGS, unique_stocks
+from chinese_names import get_names
 
 STALE_HOURS = 20  # refresh data older than this
+
+CN_NAMES = get_names()
 
 def normalize_dy(raw_dy):
     """yfinance returns dividend_yield inconsistently (decimal vs percentage).
@@ -47,6 +50,7 @@ def fetch_stock(code):
         result = {
             "code": code,
             "name": info.get("longName", info.get("shortName", "")),
+            "name_cn": CN_NAMES.get(code, ""),
             "sector": info.get("sector", ""),
             "industry": info.get("industry", ""),
             "market_cap": info.get("marketCap"),
@@ -206,6 +210,17 @@ def main():
         [sys.executable, "build_dashboard.py"],
         cwd=BASE_DIR,
         capture_output=True, text=True, timeout=60
+    )
+    print(result.stdout.strip(), flush=True)
+    if result.stderr:
+        print(f"Stderr: {result.stderr.strip()}", flush=True)
+    
+    # Build K-line data
+    print("\nBuilding K-line data...", flush=True)
+    result = subprocess.run(
+        [sys.executable, "build_kline.py"],
+        cwd=BASE_DIR,
+        capture_output=True, text=True, timeout=120
     )
     print(result.stdout.strip(), flush=True)
     if result.stderr:

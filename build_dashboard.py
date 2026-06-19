@@ -16,6 +16,18 @@ if not DATA_DIR or not os.path.isdir(DATA_DIR):
 OUTPUT_FILE = os.environ.get("TWSE_OUTPUT_FILE", os.path.join(BASE_DIR, "dashboard.html"))
 CACHE_FILE = os.path.join(DATA_DIR, "_dashboard_cache.json")
 
+# Lazy-load Chinese names for backward compatibility with old data
+_CN_NAMES = None
+def _get_cn_name(code):
+    global _CN_NAMES
+    if _CN_NAMES is None:
+        try:
+            from chinese_names import get_names
+            _CN_NAMES = get_names()
+        except Exception:
+            _CN_NAMES = {}
+    return _CN_NAMES.get(code, "")
+
 
 def get_data_mtime():
     """Latest modification time across all source JSON files (skip cache/output)."""
@@ -70,12 +82,15 @@ def build_data():
                 with open(sp, encoding="utf-8") as f:
                     raw = json.load(f)
                 stocks_data[code] = {k: raw.get(k) for k in [
-                    "code", "name", "sector", "industry", "market_cap",
+                    "code", "name", "name_cn", "sector", "industry", "market_cap",
                     "trailing_pe", "forward_pe", "price_to_book",
                     "revenue_growth", "profit_margins", "return_on_equity",
                     "debt_to_equity", "current_price", "dividend_yield",
                     "beta", "52w_high", "52w_low", "currency"
                 ]}
+                # Fill name_cn if missing (old data compat)
+                if not stocks_data[code].get("name_cn"):
+                    stocks_data[code]["name_cn"] = _get_cn_name(code)
 
     return etfs, stocks_data
 
@@ -204,7 +219,7 @@ function renderApp(){
 function renderOverview(){
   var h = '<div class="chart-box"><h2>前10大市值成分股</h2><table class="top10-table"><thead><tr><th>#</th><th>代碼</th><th>名稱</th><th>市值</th><th>本益比</th><th>股價淨值比</th><th>殖利率</th><th>ROE</th></tr></thead><tbody>';
   DATA.top10.forEach(function(s,i){
-    h += '<tr data-code="'+esc(s.code)+'"><td>'+(i+1)+'</td><td style="font-weight:600">'+esc(s.code)+'</td><td>'+esc((s.name||'').slice(0,20))+'</td><td>'+fmt(s.market_cap)+'</td><td>'+(s.trailing_pe?s.trailing_pe.toFixed(1):'—')+'</td><td>'+(s.price_to_book?s.price_to_book.toFixed(2):'—')+'</td><td style="color:#059669">'+dy(s.dividend_yield)+'</td><td>'+pct(s.return_on_equity)+'</td></tr>';
+    h += '<tr data-code="'+esc(s.code)+'"><td>'+(i+1)+'</td><td style="font-weight:600">'+esc(s.code)+'</td><td>'+esc((s.name_cn||s.name||'').slice(0,20))+'</td><td>'+fmt(s.market_cap)+'</td><td>'+(s.trailing_pe?s.trailing_pe.toFixed(1):'—')+'</td><td>'+(s.price_to_book?s.price_to_book.toFixed(2):'—')+'</td><td style="color:#059669">'+dy(s.dividend_yield)+'</td><td>'+pct(s.return_on_equity)+'</td></tr>';
   });
   h += '</tbody></table></div>';
   h += '<div class="chart-box"><h2>本益比最低30檔</h2><canvas id="peRankChart"></canvas></div>';
@@ -225,7 +240,7 @@ function renderIndividual(){
   h += '</select></div>';
   // ETF info card
   h += '<div class="etf-card" style="margin-bottom:20px;border-color:#0f172a;border-width:2px">';
-  h += '<h3>'+esc(activeTab)+' '+esc(s.name||'')+'</h3><div class="etf-code">'+(s.count||0)+' 檔成分股</div>';
+  h += '<h3>'+esc(activeTab)+' '+esc(s.name_cn||s.name||'')+'</h3><div class="etf-code">'+(s.count||0)+' 檔成分股</div>';
   h += '<div class="etf-stats">';
   h += '<div class="stat"><div class="stat-label">平均本益比</div><div class="stat-value">'+(s.avg_pe!=null?s.avg_pe:'—')+'</div></div>';
   h += '<div class="stat"><div class="stat-label">平均殖利率</div><div class="stat-value" style="color:#059669">'+(s.avg_dy!=null?Number(s.avg_dy).toFixed(2)+'%':'—')+'</div></div>';
@@ -255,7 +270,7 @@ function renderStockRows(){
   var stocks = (ETFS[activeTab]?ETFS[activeTab].stocks:[]).map(function(c){return S[c];}).filter(Boolean);
   if(searchQuery){
     var q = searchQuery.toLowerCase();
-    stocks = stocks.filter(function(s){return (s.code&&s.code.indexOf(q)>-1)||(s.name&&s.name.toLowerCase().indexOf(q)>-1);});
+    stocks = stocks.filter(function(s){return (s.code&&s.code.indexOf(q)>-1)||((s.name_cn||s.name)&&(s.name_cn||s.name).toLowerCase().indexOf(q)>-1);});
   }
   if(sortCol){
     stocks.sort(function(a,b){
@@ -265,7 +280,7 @@ function renderStockRows(){
     });
   }
   return stocks.map(function(s){
-    return '<tr data-code="'+esc(s.code)+'"><td style="font-weight:600">'+esc(s.code)+'</td><td>'+esc((s.name||'').slice(0,24))+'</td><td>'+esc(s.sector||'')+'</td><td>'+(s.current_price!=null?s.current_price.toFixed(0):'—')+'</td><td>'+(s.trailing_pe!=null?s.trailing_pe.toFixed(1):'—')+'</td><td>'+(s.price_to_book!=null?s.price_to_book.toFixed(2):'—')+'</td><td>'+pct(s.return_on_equity)+'</td><td style="color:#059669">'+dy(s.dividend_yield)+'</td><td>'+(s.beta!=null?s.beta.toFixed(2):'—')+'</td></tr>';
+    return '<tr data-code="'+esc(s.code)+'"><td style="font-weight:600">'+esc(s.code)+'</td><td>'+esc((s.name_cn||s.name||'').slice(0,24))+'</td><td>'+esc(s.sector||'')+'</td><td>'+(s.current_price!=null?s.current_price.toFixed(0):'—')+'</td><td>'+(s.trailing_pe!=null?s.trailing_pe.toFixed(1):'—')+'</td><td>'+(s.price_to_book!=null?s.price_to_book.toFixed(2):'—')+'</td><td>'+pct(s.return_on_equity)+'</td><td style="color:#059669">'+dy(s.dividend_yield)+'</td><td>'+(s.beta!=null?s.beta.toFixed(2):'—')+'</td></tr>';
   }).join('');
 }
 
@@ -307,10 +322,13 @@ function openModal(code){
     items += '<div class="modal-item"><div class="mlabel">'+lb+'</div><div class="mvalue">'+dsp+'</div></div>';
   }
   var chartId = 'kline_'+code;
-  overlay.innerHTML = '<div class="modal" style="max-width:760px"><div class="modal-header"><div><h2>'+esc(s.code)+' '+esc(s.name||'')+'</h2><div class="modal-badge">'+esc(s.sector||'')+' · '+esc(s.industry||'')+'</div></div><button class="modal-close" onclick="this.parentElement.parentElement.parentElement.remove()">✕</button></div><div class="modal-grid">'+items+'</div><div class="kline-box"><h3>日K線</h3><div class="kline-periods"><button class="active" data-period="6mo">6月</button><button data-period="1y">1年</button><button data-period="2y">2年</button></div><div class="chart-wrap"><canvas id="'+chartId+'"></canvas></div></div></div>';
+  overlay.innerHTML = '<div class="modal" style="max-width:760px"><div class="modal-header"><div><h2>'+esc(s.code)+' '+esc(s.name_cn||s.name||'')+'</h2><div class="modal-badge">'+esc(s.sector||'')+' · '+esc(s.industry||'')+'</div></div><button class="modal-close" onclick="this.parentElement.parentElement.parentElement.remove()">✕</button></div><div class="modal-grid">'+items+'</div><div class="kline-box"><h3>日K線</h3><div class="kline-periods"><button class="active" data-period="6mo">6月</button><button data-period="1y">1年</button><button data-period="2y">2年</button></div><div class="chart-wrap"><canvas id="'+chartId+'"></canvas></div></div></div>';
   document.body.appendChild(overlay);
   loadKline(code,'6mo');
 }
+
+var KLINE_DATA = null;
+fetch('/twse-etf-fa-hermes/kline_data.json').then(function(r){return r.json();}).then(function(d){KLINE_DATA=d;}).catch(function(){});
 
 function loadKline(code,period,_btn){
   if(!code) return;
@@ -325,9 +343,18 @@ function loadKline(code,period,_btn){
   ctx.fillText('載入中...',canvas.width/2,canvas.height/2);
   var pr = canvas.closest('.kline-box')?.querySelector('.kline-periods');
   if(pr) pr.querySelectorAll('button').forEach(function(b){b.className=''; if(b.dataset.period===period)b.className='active';});
-  fetch('/api/history?code='+code+'&period='+period).then(function(r){return r.json();}).then(function(data){
-    if(!data.ohlcv||data.ohlcv.length===0) return;
-    var ohlcv = data.ohlcv;
+  
+  // Helper: load once, use from cache
+  function renderKline(kd){
+    if(!kd||!kd.t||kd.t.length===0){
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.font='14px sans-serif'; ctx.fillStyle='#94a3b8'; ctx.textAlign='center';
+      ctx.fillText('暫無K線資料',canvas.width/2,canvas.height/2);
+      return;
+    }
+    var ohlcv = kd.t.map(function(t,i){
+      return {t:t, o:kd.o[i], h:kd.h[i], l:kd.l[i], c:kd.c[i], v:kd.v[i]};
+    });
     var prices = ohlcv.map(function(d){return {x:d.t, y:d.c};});
     function sma(arr,n){
       var r=[]; for(var i=0;i<arr.length;i++){
@@ -339,9 +366,19 @@ function loadKline(code,period,_btn){
     new Chart(canvas, {
       type: 'line',
       data: {datasets:[{label:code+' 收盤價',data:prices,borderColor:'#0f172a',borderWidth:2,pointRadius:0,fill:false,tension:0.1,order:0},{label:'MA20',data:sma(prices,20),borderColor:'#8b5cf6',borderWidth:1.5,pointRadius:0,fill:false,borderDash:[4,3],order:1},{label:'MA60',data:sma(prices,60),borderColor:'#ec4899',borderWidth:1.5,pointRadius:0,fill:false,borderDash:[4,3],order:2}]},
-      options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'top',labels:{boxWidth:14,font:{size:11},usePointStyle:true}},tooltip:{backgroundColor:'#fff',titleColor:'#0f172a',bodyColor:'#475569',borderColor:'#e2e8f0',borderWidth:1,cornerRadius:8,padding:12,boxPadding:4,callbacks:{title:function(items){return items[0].label;},label:function(ctx){if(ctx.dataset.label.indexOf('MA')===0) return ctx.dataset.label+': '+ctx.parsed.y.toFixed(2);return code+'收盤價: '+ctx.parsed.y.toFixed(2);}}}},scales:{x:{type:'category',grid:{display:false},ticks:{font:{size:10},color:'#94a3b8',maxRotation:45}},y:{beginAtZero:false,grid:{color:'#f1f5f9',drawBorder:false},ticks:{font:{size:11},color:'#475569',callback:function(v){return v.toFixed(0);}}}}}
+      options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'top',labels:{boxWidth:14,font:{size:11},usePointStyle:true}},tooltip:{backgroundColor:'#fff',titleColor:'#0f172a',bodyColor:'#475569',borderColor:'#e2e8f0',borderWidth:1,cornerRadius:8,padding:12,boxPadding:4,callbacks:{title:function(items){return new Date(items[0].parsed.x*1000).toLocaleDateString('zh-TW');},label:function(ctx){if(ctx.dataset.label.indexOf('MA')===0) return ctx.dataset.label+': '+ctx.parsed.y.toFixed(2);return code+'收盤價: '+ctx.parsed.y.toFixed(2);}}}},scales:{x:{type:'linear',grid:{display:false},ticks:{font:{size:10},color:'#94a3b8',callback:function(v){return new Date(v*1000).toLocaleDateString('zh-TW',{month:'short',day:'numeric'})}}},y:{beginAtZero:false,grid:{color:'#f1f5f9',drawBorder:false},ticks:{font:{size:11},color:'#475569',callback:function(v){return v.toFixed(0);}}}}}
     });
-  }).catch(function(e){console.error('Kline error:',e);});
+  }
+  
+  if(KLINE_DATA && KLINE_DATA[code]){
+    renderKline(KLINE_DATA[code]);
+  } else {
+    // Lazy load if not cached yet
+    fetch('/twse-etf-fa-hermes/kline_data.json').then(function(r){return r.json();}).then(function(d){
+      KLINE_DATA = d;
+      renderKline(d[code]);
+    }).catch(function(e){console.error('Kline error:',e);});
+  }
 }
 
 document.addEventListener('click', function(e){

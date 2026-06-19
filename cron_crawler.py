@@ -15,6 +15,9 @@ os.makedirs(DATA_DIR, exist_ok=True)
 # 從共用模組載入 ETF 清單，確保唯一事實來源
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from etf_holdings import ETF_HOLDINGS, unique_stocks
+from chinese_names import get_names
+
+CN_NAMES = get_names()
 
 
 def fetch_stock(tw_code):
@@ -26,6 +29,7 @@ def fetch_stock(tw_code):
         result = {
             "code": tw_code,
             "name": info.get("longName", info.get("shortName", "")),
+            "name_cn": CN_NAMES.get(tw_code, ""),
             "sector": info.get("sector", ""),
             "industry": info.get("industry", ""),
             "market_cap": info.get("marketCap"),

@@ -28,7 +28,9 @@ jobs:
         working-directory: ${{ github.workspace }}
 
       - name: Build dashboard
-        run: python build_dashboard.py
+        run: |
+          python build_dashboard.py
+          python build_kline.py
         env:
           TWSE_DATA_DIR: ${{ github.workspace }}/data
           TWSE_OUTPUT_FILE: ${{ github.workspace }}/dashboard.html
@@ -38,7 +40,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add dashboard.html data/*/meta.json 2>/dev/null || true
+          git add dashboard.html data/*/meta.json data/kline_data.json 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
