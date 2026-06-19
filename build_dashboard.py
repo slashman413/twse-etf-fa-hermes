@@ -328,7 +328,7 @@ function openModal(code){
 }
 
 var KLINE_DATA = null;
-fetch('/twse-etf-fa-hermes/kline_data.json').then(function(r){return r.json();}).then(function(d){KLINE_DATA=d;}).catch(function(){});
+fetch('/twse-etf-fa-hermes/data/kline_data.json').then(function(r){return r.json();}).then(function(d){KLINE_DATA=d;}).catch(function(){});
 
 function loadKline(code,period,_btn){
   if(!code) return;
@@ -374,7 +374,7 @@ function loadKline(code,period,_btn){
     renderKline(KLINE_DATA[code]);
   } else {
     // Lazy load if not cached yet
-    fetch('/twse-etf-fa-hermes/kline_data.json').then(function(r){return r.json();}).then(function(d){
+    fetch('/twse-etf-fa-hermes/data/kline_data.json').then(function(r){return r.json();}).then(function(d){
       KLINE_DATA = d;
       renderKline(d[code]);
     }).catch(function(e){console.error('Kline error:',e);});

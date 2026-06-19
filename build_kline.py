@@ -20,6 +20,8 @@ from etf_holdings import ETF_HOLDINGS, unique_stocks
 
 PERIOD = "6mo"   # fetch ~180 trading days
 OUTPUT_FILE = os.path.join(DATA_DIR, "kline_data.json")
+# Also save to repo root for GitHub Pages
+REPO_OUTPUT = os.path.join(BASE_DIR, "data", "kline_data.json")
 
 
 def fetch_kline(code):
@@ -80,6 +82,10 @@ def main():
 
     # Save
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+        json.dump(all_data, f, ensure_ascii=False)
+    # Also write to repo root for GitHub Pages
+    os.makedirs(os.path.dirname(REPO_OUTPUT), exist_ok=True)
+    with open(REPO_OUTPUT, "w", encoding="utf-8") as f:
         json.dump(all_data, f, ensure_ascii=False)
     size_mb = os.path.getsize(OUTPUT_FILE) / 1_000_000
 
