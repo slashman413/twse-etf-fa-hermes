@@ -351,7 +351,7 @@ function renderHealth(){
   row('🔝 前3大持股佔比',top3pct.toFixed(1)+'%',top3pct>50?'#dc2626':'#0f172a');
   row('🏢 最大產業佔比',topSectorPct+'%',topSectorPct>50?'#dc2626':'#0f172a');
   row('📈 本益比中位數',peMed!=null?peMed.toFixed(1):'—');
-  row('💰 殖利率中位數',dyMed!=null?(dyMed*100).toFixed(2)+'%':'—');
+  row('💰 殖利率中位數',dyMed!=null?dyMed.toFixed(2)+'%':'—');
   row('📉 平均 Beta',betaAvg);
   row('📊 ROE 中位數',roeMed!=null?(roeMed*100).toFixed(2)+'%':'—');
   h += '</table>';
