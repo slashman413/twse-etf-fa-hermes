@@ -65,6 +65,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "auto: monthly ETF financial crawl $(date +'%Y-%m-%d')
+            git commit -m "auto: monthly ETF financial crawl $(date +'%Y-%m-%d')"
             git push
           fi
