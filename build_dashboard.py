@@ -195,12 +195,13 @@ function switchTab(tab){
 function renderApp(){
   const app = document.getElementById('app');
   let h = '<div class="header"><div><h1>TWSE ETF 財務儀表板</h1><div class="meta">'+Object.keys(S).length+' 檔成分股 · '+ETF_CODES.length+' 檔ETF · 更新 '+DATA.crawledAt+'</div></div><span style="font-size:12px;color:#94a3b8">yfinance</span></div>';
+  h += '<div class="disclaimer">⚠️ 本資訊僅供教育參考，非投資建議；所有數據與分析（含財務指標、健康分析評分、K線）僅供參考，資料來自 Yahoo Finance (yfinance) 可能延遲或有誤，過去績效不代表未來結果，投資前請自行評估風險並自負盈虧。</div>';
   h += '<div class="tab-bar"><button class="tab-btn'+(currentTab==='overview'?' active':'')+'" onclick="switchTab(\'overview\')">📊 總覽</button><button class="tab-btn'+(currentTab==='individual'?' active':'')+'" onclick="switchTab(\'individual\')">📋 個別ETF資訊</button></div>';
   h += '<div id="tabContent">';
   if(currentTab==='overview'){ h += renderOverview(); }
   else { h += renderIndividual(); }
   h += '</div>';
-  h += '<div class="footer">資料來源: yfinance · <a href="./privacy.html" style="color:#94a3b8;text-decoration:none">隱私權政策</a></div>';
+  h += '<div class="footer">本資訊僅供教育參考，非投資建議；數據與分析僅供參考，過去績效不代表未來結果，投資前請自行評估風險。<br>資料來源: Yahoo Finance (yfinance)（非官方、非交易所授權資料） · <a href="./privacy.html" style="color:#94a3b8;text-decoration:none">隱私權政策</a></div>';
   app.innerHTML = h;
   app.querySelector('#stockBody')?.addEventListener('click', function(e){
     var tr = e.target.closest('tr[data-code]');
@@ -550,7 +551,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans
 .top10-table{width:100%;border-collapse:collapse;font-size:13px}
 .top10-table th{text-align:left;padding:8px 12px;border-bottom:2px solid #e2e8f0;color:#64748b;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:0.05em}
 .top10-table td{padding:8px 12px;border-bottom:1px solid #f1f5f9;font-variant-numeric:tabular-nums}
-.footer{text-align:center;padding:20px;font-size:12px;color:#94a3b8}
+.disclaimer{background:#fffbeb;border:1px solid #fde68a;color:#92400e;border-radius:10px;padding:12px 16px;margin-bottom:24px;font-size:13px;line-height:1.6}
+.footer{text-align:center;padding:20px;font-size:12px;color:#94a3b8;line-height:1.7}
 .tab-bar{display:flex;gap:0;margin-bottom:24px;border-bottom:2px solid #e2e8f0}
 .tab-btn{padding:10px 24px;border:none;background:none;font-size:15px;font-weight:600;color:#94a3b8;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;font-family:inherit;transition:all 0.15s}
 .tab-btn:hover{color:#475569}
