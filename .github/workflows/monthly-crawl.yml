@@ -39,7 +39,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install deps
-        run: pip install yfinance
+        run: pip install yfinance "slashman-finance-utils @ git+https://github.com/slashman413/slashman-finance-utils@v0.1.0"
 
       - name: Run monthly crawl
         run: python cron_crawler.py

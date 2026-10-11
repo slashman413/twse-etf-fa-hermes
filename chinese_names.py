@@ -8,32 +8,22 @@
     from chinese_names import get_names
     names = get_names()  # {"2330": "台積電", "5274O": "信驊", ...}
 """
-import json, os, time
-from urllib.request import urlopen, Request
+import json, os
+
+from slashman_finance import fetch_json, stock_names
 
 CACHE_FILE = os.path.join(os.path.dirname(__file__), "stock_names_cn.json")
 
 
 def _fetch_json(url, retries=3):
-    """Fetch JSON from URL with retries."""
-    for i in range(retries):
-        try:
-            req = Request(url, headers={"User-Agent": "Mozilla/5.0"})
-            with urlopen(req, timeout=15) as r:
-                return json.loads(r.read().decode("utf-8"))
-        except Exception as e:
-            if i == retries - 1:
-                raise
-            time.sleep(2 ** i)
-    return {}
+    """Fetch JSON from URL with retries (shared TWSE/TPEx client)."""
+    return fetch_json(url, timeout=15, retries=retries - 1)
 
 
 def fetch_twse_names():
     """Fetch listed stock Chinese names from TWSE API."""
-    url = "https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL"
     try:
-        data = _fetch_json(url)
-        return {d["Code"]: d["Name"] for d in data}
+        return stock_names(timeout=15)
     except Exception as e:
         print(f"  [WARN] TWSE API failed: {e}", flush=True)
         return {}
