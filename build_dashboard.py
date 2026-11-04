@@ -563,6 +563,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans
 <div id="app" class="container"></div>
 <script>
 """ + jscode + """</script>
+<script src="https://slashmantools.us/shared/google-signup.js" defer></script>
 </body>
 </html>"""
 
